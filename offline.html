@@ -4,20 +4,36 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Offline</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+      text-align: center;
+    }
+    pre {
+      background: #f1f1f1;
+      padding: 1rem;
+      border-radius: 6px;
+      white-space: pre-wrap;
+    }
+  </style>
 </head>
 <body>
   <h1>You are offline</h1>
-  <pre id="message">Loading offline message...</pre>
+  <!-- Default bundled message (will show even on first offline visit) -->
+  <pre id="message">You are currently offline. Please check your internet connection and try again.</pre>
 
   <script>
-    // Fetch and show the offline message
+    // Try fetching the updated offline message from the txt file
     fetch('offline-message.txt')
-      .then(res => res.text())
+      .then(res => res.ok ? res.text() : Promise.reject())
       .then(text => {
         document.getElementById('message').textContent = text;
       })
       .catch(() => {
-        document.getElementById('message').textContent = 'Could not load the message.';
+        // Do nothing — default message stays
       });
   </script>
 </body>
