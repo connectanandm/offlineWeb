@@ -1,4 +1,4 @@
-const CACHE_NAME = 'offline-cache-v3';
+const CACHE_NAME = 'offline-cache-v4';
 const OFFLINE_URL = 'offline.html';
 const OFFLINE_MSG_URL = 'offline-message.txt';
 
