@@ -1,1 +1,115 @@
-You are offline.
+import java.io.*;
+import java.util.*;
+
+// Book class
+class Book {
+    private String title;
+    private String author;
+    private int id;
+
+    public Book(int id, String title, String author) {
+        this.id = id;
+        this.title = title;
+        this.author = author;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    @Override
+    public String toString() {
+        return "Book ID: " + id + ", Title: " + title + ", Author: " + author;
+    }
+}
+
+// Library class
+class Library {
+    private List<Book> books = new ArrayList<>();
+
+    public void addBook(Book book) {
+        books.add(book);
+    }
+
+    public void removeBook(int id) {
+        books.removeIf(book -> book.getId() == id);
+    }
+
+    public void displayBooks() {
+        if (books.isEmpty()) {
+            System.out.println("No books available in the library.");
+        } else {
+            books.forEach(System.out::println);
+        }
+    }
+
+    public void saveToFile(String filename) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+            for (Book book : books) {
+                writer.write(book.getId() + "," + book.getTitle() + "," + book.getAuthor());
+                writer.newLine();
+            }
+        }
+    }
+
+    public void loadFromFile(String filename) throws IOException {
+        books.clear();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                books.add(new Book(Integer.parseInt(parts[0]), parts[1], parts[2]));
+            }
+        }
+    }
+}
+
+// Multithreading example
+class LibraryThread extends Thread {
+    private Library library;
+
+    public LibraryThread(Library library) {
+        this.library = library;
+    }
+
+    @Override
+    public void run() {
+        System.out.println("Displaying books in a separate thread:");
+        library.displayBooks();
+    }
+}
+
+// Main class
+public class LibraryManagementSystem {
+    public static void main(String[] args) {
+        Library library = new Library();
+
+        // Adding books
+        library.addBook(new Book(1, "1984", "George Orwell"));
+        library.addBook(new Book(2, "To Kill a Mockingbird", "Harper Lee"));
+        library.addBook(new Book(3, "The Great Gatsby", "F. Scott Fitzgerald"));
+
+        // Display books
+        library.displayBooks();
+
+        // Save and load books
+        try {
+            library.saveToFile("library.txt");
+            library.loadFromFile("library.txt");
+        } catch (IOException e) {
+            System.out.println("Error handling file: " + e.getMessage());
+        }
+
+        // Multithreading
+        LibraryThread thread = new LibraryThread(library);
+        thread.start();
+    }
+}
