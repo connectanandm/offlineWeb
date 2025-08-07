@@ -1,3 +1,208 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm> // For std::remove_if
+
+// Represents a Book in the library
+class Book {
+public:
+    std::string title;
+    std::string author;
+    std::string isbn;
+    bool isBorrowed;
+
+    Book(std::string t, std::string a, std::string i) :
+        title(t), author(a), isbn(i), isBorrowed(false) {}
+
+    void display() const {
+        std::cout << "Title: " << title << ", Author: " << author
+                  << ", ISBN: " << isbn << ", Borrowed: " << (isBorrowed ? "Yes" : "No") << std::endl;
+    }
+};
+
+// Represents a Library Member
+class Member {
+public:
+    std::string name;
+    int memberId;
+    std::vector<std::string> borrowedBooksISBNs; // Stores ISBNs of borrowed books
+
+    Member(std::string n, int id) : name(n), memberId(id) {}
+
+    void display() const {
+        std::cout << "Member Name: " << name << ", ID: " << memberId << std::endl;
+        if (!borrowedBooksISBNs.empty()) {
+            std::cout << "  Borrowed Books (ISBNs): ";
+            for (const auto& isbn : borrowedBooksISBNs) {
+                std::cout << isbn << " ";
+            }
+            std::cout << std::endl;
+        } else {
+            std::cout << "  No books currently borrowed." << std::endl;
+        }
+    }
+};
+
+// Manages the Library operations
+class Library {
+public:
+    std::vector<Book> books;
+    std::vector<Member> members;
+    int nextMemberId;
+
+    Library() : nextMemberId(1) {}
+
+    void addBook(const std::string& title, const std::string& author, const std::string& isbn) {
+        books.emplace_back(title, author, isbn);
+        std::cout << "Book '" << title << "' added to the library." << std::endl;
+    }
+
+    void addMember(const std::string& name) {
+        members.emplace_back(name, nextMemberId++);
+        std::cout << "Member '" << name << "' added with ID: " << members.back().memberId << std::endl;
+    }
+
+    void borrowBook(int memberId, const std::string& isbn) {
+        // Find member
+        Member* foundMember = nullptr;
+        for (auto& m : members) {
+            if (m.memberId == memberId) {
+                foundMember = &m;
+                break;
+            }
+        }
+
+        if (!foundMember) {
+            std::cout << "Error: Member with ID " << memberId << " not found." << std::endl;
+            return;
+        }
+
+        // Find book
+        Book* foundBook = nullptr;
+        for (auto& b : books) {
+            if (b.isbn == isbn) {
+                foundBook = &b;
+                break;
+            }
+        }
+
+        if (!foundBook) {
+            std::cout << "Error: Book with ISBN " << isbn << " not found." << std::endl;
+            return;
+        }
+
+        if (foundBook->isBorrowed) {
+            std::cout << "Error: Book '" << foundBook->title << "' is already borrowed." << std::endl;
+            return;
+        }
+
+        foundBook->isBorrowed = true;
+        foundMember->borrowedBooksISBNs.push_back(isbn);
+        std::cout << "Book '" << foundBook->title << "' borrowed by " << foundMember->name << "." << std::endl;
+    }
+
+    void returnBook(int memberId, const std::string& isbn) {
+        // Find member
+        Member* foundMember = nullptr;
+        for (auto& m : members) {
+            if (m.memberId == memberId) {
+                foundMember = &m;
+                break;
+            }
+        }
+
+        if (!foundMember) {
+            std::cout << "Error: Member with ID " << memberId << " not found." << std::endl;
+            return;
+        }
+
+        // Find book
+        Book* foundBook = nullptr;
+        for (auto& b : books) {
+            if (b.isbn == isbn) {
+                foundBook = &b;
+                break;
+            }
+        }
+
+        if (!foundBook) {
+            std::cout << "Error: Book with ISBN " << isbn << " not found." << std::endl;
+            return;
+        }
+
+        if (!foundBook->isBorrowed) {
+            std::cout << "Error: Book '" << foundBook->title << "' was not borrowed." << std::endl;
+            return;
+        }
+
+        // Remove ISBN from member's borrowed list
+        foundMember->borrowedBooksISBNs.erase(
+            std::remove_if(foundMember->borrowedBooksISBNs.begin(), foundMember->borrowedBooksISBNs.end(),
+                           [&](const std::string& s) { return s == isbn; }),
+            foundMember->borrowedBooksISBNs.end());
+
+        foundBook->isBorrowed = false;
+        std::cout << "Book '" << foundBook->title << "' returned by " << foundMember->name << "." << std::endl;
+    }
+
+    void displayAllBooks() const {
+        std::cout << "\n--- All Books in Library ---" << std::endl;
+        if (books.empty()) {
+            std::cout << "No books in the library." << std::endl;
+            return;
+        }
+        for (const auto& book : books) {
+            book.display();
+        }
+    }
+
+    void displayAllMembers() const {
+        std::cout << "\n--- All Library Members ---" << std::endl;
+        if (members.empty()) {
+            std::cout << "No members registered." << std::endl;
+            return;
+        }
+        for (const auto& member : members) {
+            member.display();
+        }
+    }
+};
+
+int main() {
+    Library myLibrary;
+
+    // Add some books
+    myLibrary.addBook("The Great Gatsby", "F. Scott Fitzgerald", "978-0743273565");
+    myLibrary.addBook("1984", "George Orwell", "978-0451524935");
+    myLibrary.addBook("To Kill a Mockingbird", "Harper Lee", "978-0061120084");
+
+    // Add some members
+    myLibrary.addMember("Alice Smith");
+    myLibrary.addMember("Bob Johnson");
+
+    myLibrary.displayAllBooks();
+    myLibrary.displayAllMembers();
+
+    // Borrow some books
+    myLibrary.borrowBook(1, "978-0743273565"); // Alice borrows The Great Gatsby
+    myLibrary.borrowBook(2, "978-0451524935"); // Bob borrows 1984
+    myLibrary.borrowBook(1, "978-0061120084"); // Alice borrows To Kill a Mockingbird
+
+    myLibrary.displayAllBooks();
+    myLibrary.displayAllMembers();
+
+    // Try to borrow an already borrowed book
+    myLibrary.borrowBook(2, "978-0743273565");
+
+    // Return a book
+    myLibrary.returnBook(1, "978-0743273565"); // Alice returns The Great Gatsby
+
+    myLibrary.displayAllBooks();
+    myLibrary.displayAllMembers();
+
+    return 0;
+}
+**********************************
 import json
 
 class Contact:
