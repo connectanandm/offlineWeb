@@ -1,115 +1,111 @@
-import java.io.*;
-import java.util.*;
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-// Book class
-class Book {
-    private String title;
-    private String author;
-    private int id;
+#define MAX 100
 
-    public Book(int id, String title, String author) {
-        this.id = id;
-        this.title = title;
-        this.author = author;
+typedef struct {
+    int id;
+    char name[50];
+    int age;
+    float marks;
+} Student;
+
+Student students[MAX];
+int count = 0;
+
+void addStudent() {
+    if (count >= MAX) {
+        printf("Student list is full!\n");
+        return;
     }
+    printf("Enter ID: ");
+    scanf("%d", &students[count].id);
+    printf("Enter Name: ");
+    scanf(" %[^\n]", students[count].name);
+    printf("Enter Age: ");
+    scanf("%d", &students[count].age);
+    printf("Enter Marks: ");
+    scanf("%f", &students[count].marks);
+    count++;
+    printf("Student added successfully!\n");
+}
 
-    public int getId() {
-        return id;
+void viewStudents() {
+    if (count == 0) {
+        printf("No students to display.\n");
+        return;
     }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    @Override
-    public String toString() {
-        return "Book ID: " + id + ", Title: " + title + ", Author: " + author;
+    printf("\nID\tName\t\tAge\tMarks\n");
+    for (int i = 0; i < count; i++) {
+        printf("%d\t%s\t\t%d\t%.2f\n", students[i].id, students[i].name, students[i].age, students[i].marks);
     }
 }
 
-// Library class
-class Library {
-    private List<Book> books = new ArrayList<>();
-
-    public void addBook(Book book) {
-        books.add(book);
-    }
-
-    public void removeBook(int id) {
-        books.removeIf(book -> book.getId() == id);
-    }
-
-    public void displayBooks() {
-        if (books.isEmpty()) {
-            System.out.println("No books available in the library.");
-        } else {
-            books.forEach(System.out::println);
+void searchStudent() {
+    int id;
+    printf("Enter ID to search: ");
+    scanf("%d", &id);
+    for (int i = 0; i < count; i++) {
+        if (students[i].id == id) {
+            printf("Student Found: %s, Age: %d, Marks: %.2f\n", students[i].name, students[i].age, students[i].marks);
+            return;
         }
     }
+    printf("Student not found.\n");
+}
 
-    public void saveToFile(String filename) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
-            for (Book book : books) {
-                writer.write(book.getId() + "," + book.getTitle() + "," + book.getAuthor());
-                writer.newLine();
+void deleteStudent() {
+    int id, found = 0;
+    printf("Enter ID to delete: ");
+    scanf("%d", &id);
+    for (int i = 0; i < count; i++) {
+        if (students[i].id == id) {
+            for (int j = i; j < count - 1; j++) {
+                students[j] = students[j + 1];
             }
+            count--;
+            found = 1;
+            printf("Student deleted successfully.\n");
+            break;
         }
     }
-
-    public void loadFromFile(String filename) throws IOException {
-        books.clear();
-        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                books.add(new Book(Integer.parseInt(parts[0]), parts[1], parts[2]));
-            }
-        }
+    if (!found) {
+        printf("Student not found.\n");
     }
 }
 
-// Multithreading example
-class LibraryThread extends Thread {
-    private Library library;
+int main() {
+    int choice;
+    while (1) {
+        printf("\n--- Student Management System ---\n");
+        printf("1. Add Student\n");
+        printf("2. View Students\n");
+        printf("3. Search Student\n");
+        printf("4. Delete Student\n");
+        printf("5. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
 
-    public LibraryThread(Library library) {
-        this.library = library;
-    }
-
-    @Override
-    public void run() {
-        System.out.println("Displaying books in a separate thread:");
-        library.displayBooks();
-    }
-}
-
-// Main class
-public class LibraryManagementSystem {
-    public static void main(String[] args) {
-        Library library = new Library();
-
-        // Adding books
-        library.addBook(new Book(1, "1984", "George Orwell"));
-        library.addBook(new Book(2, "To Kill a Mockingbird", "Harper Lee"));
-        library.addBook(new Book(3, "The Great Gatsby", "F. Scott Fitzgerald"));
-
-        // Display books
-        library.displayBooks();
-
-        // Save and load books
-        try {
-            library.saveToFile("library.txt");
-            library.loadFromFile("library.txt");
-        } catch (IOException e) {
-            System.out.println("Error handling file: " + e.getMessage());
+        switch (choice) {
+            case 1:
+                addStudent();
+                break;
+            case 2:
+                viewStudents();
+                break;
+            case 3:
+                searchStudent();
+                break;
+            case 4:
+                deleteStudent();
+                break;
+            case 5:
+                printf("Exiting program. Goodbye!\n");
+                exit(0);
+            default:
+                printf("Invalid choice. Please try again.\n");
         }
-
-        // Multithreading
-        LibraryThread thread = new LibraryThread(library);
-        thread.start();
     }
+    return 0;
 }
