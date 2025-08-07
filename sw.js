@@ -7,7 +7,7 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME).then(cache => {
       return cache.addAll([
         OFFLINE_URL,
-        OFFLINE_MSG_URL // Cache offline message initially
+        OFFLINE_MSG_URL // Initially cache offline message
       ]);
     })
   );
@@ -32,7 +32,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const requestURL = new URL(event.request.url);
 
-  // ✅ Stale-while-revalidate for offline-message.txt
+  // ✅ Handle offline-message.txt with stale-while-revalidate
   if (requestURL.pathname.endsWith(OFFLINE_MSG_URL)) {
     event.respondWith(
       caches.open(CACHE_NAME).then(cache =>
@@ -44,11 +44,9 @@ self.addEventListener('fetch', event => {
               }
               return networkResponse;
             })
-            .catch(() => {
-              // Silent fail, will fall back to cache
-            });
+            .catch(() => null); // Don't fail, fallback to cache
 
-          return cachedResponse || fetchPromise || new Response('Could not load the message.', {
+          return cachedResponse || fetchPromise || new Response('Message not available.', {
             status: 503,
             statusText: 'Offline',
             headers: { 'Content-Type': 'text/plain' }
@@ -59,7 +57,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // For navigations (like refreshing or clicking links)
+  // ✅ Handle HTML navigation (offline fallback)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(OFFLINE_URL))
@@ -67,7 +65,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Static assets: cache-first strategy
+  // ✅ Handle other static assets (cache-first strategy)
   event.respondWith(
     caches.match(event.request).then(response => {
       return response || fetch(event.request);
