@@ -4,11 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Offline-Ready Web App</title>
+
+  <!-- Optional: PWA manifest file -->
+  <link rel="manifest" href="/offlineWeb/manifest.json">
+  <meta name="theme-color" content="#ffffff">
 </head>
 <body>
   <h1>Welcome to the Web App</h1>
   <p>This is the online version of the site.</p>
 
-  <script src="script.js"></script>
+  <script src="/offlineWeb/script.js"></script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/offlineWeb/sw.js')
+          .then(function (registration) {
+            console.log('Service Worker registered with scope:', registration.scope);
+          })
+          .catch(function (error) {
+            console.log('Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
 </body>
 </html>
